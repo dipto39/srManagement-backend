@@ -37,7 +37,9 @@
             "Tests\\": "tests/"
         },
         "files": [
-            "app/Helpers/common.php"
+            "app/Helpers/Common.php",
+            "app/Helpers/Const.php"
+
         ]
 
     },
