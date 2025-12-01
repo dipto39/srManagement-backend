@@ -12,4 +12,8 @@ class UserRepository
                     ->orderBy('name')
                     ->get();
     }
+    public function getAllUsers()
+    {
+        return User::all(); 
+    }
 }

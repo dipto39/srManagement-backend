@@ -1,15 +1,17 @@
 <?php
+
 namespace App\Services\Auth;
 
 use App\Models\User;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\HasApiTokens;
 
 class AuthService
 {
-      use HasApiTokens, Notifiable; // add HasApiTokens here
-   public function login(array $credentials)
+    use HasApiTokens, Notifiable ; // add HasApiTokens here
+    public function login(array $credentials)
     {
         $user = User::where('email', $credentials['email'])->first();
 
@@ -34,5 +36,10 @@ class AuthService
         ]);
 
         return $user;
+    }
+
+    public function profile()
+    {
+        // return getAllU
     }
 }

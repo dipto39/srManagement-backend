@@ -1,6 +1,7 @@
 <?php 
 
 // Helper function to create a URL-friendly slug from a string
+
 function makeSlug($string)
 {
     return strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $string)));
@@ -23,4 +24,5 @@ function cleanText($text)
 {
     return preg_replace('/[^A-Za-z0-9\s]/', '', $text);
 }
+
 
