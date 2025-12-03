@@ -25,4 +25,10 @@ function cleanText($text)
     return preg_replace('/[^A-Za-z0-9\s]/', '', $text);
 }
 
+// Helper function to generate OTP
+function generateOTP($length = 6)
+{
+    return rand(pow(10, $length - 1), pow(10, $length) - 1);
+}
+
 

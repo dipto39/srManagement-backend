@@ -6,6 +6,10 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+        /**
+     * Disable automatic transaction wrapping
+     */
+    public $withinTransaction = false;
     /**
      * Run the migrations.
      */

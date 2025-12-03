@@ -4,13 +4,17 @@ namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\OtpRequest;
+use App\Http\Requests\Auth\OtpVerifyRequest;
 use App\Http\Requests\Auth\RegistrationRequest;
 use App\Mail\UserWelcomeMail;
+use App\Models\User;
 use App\Services\Auth\AuthService;
 use App\Traits\ApiResponse;
 use App\Traits\FileUpload;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
@@ -50,30 +54,88 @@ class AuthController extends Controller
         return $this->success($user, 'Profile retrieved successfully');
     }
 
-
-    public function sendMail()
+    public function sendOtp(OtpRequest $request)
     {
-        $user = (object)[
-            'name' => 'John Doe',
-            'email' => 'diptobiswas39@gmail.com'
-        ];
-        $filePath = storage_path('app/public/s3.png'); // your image path
-        Mail::to($user->email)->send(new UserWelcomeMail($user, $filePath));
 
-        return $this->success(null, 'Welcome email sent successfully');
+        $response = $this->authService->sendOtp(
+            $request->identifier,
+            $request->type,
+            $request->action
+        );
+
+        if ($response['status'] == true) {
+            return $this->success(null, $response['message']);
+        }
     }
+
+    //  Verify OTP API
+    public function verifyOtp(OtpVerifyRequest $request)
+    {
+        $response = $this->authService->verifyOtp(
+            $request->identifier,
+            $request->otp,
+            'reset'
+        );
+
+        if ($response['status'] == true) {
+            // Get user 
+            $user = User::where('email', $request->identifier)->firstOrFail();
+            $token = $user->createToken('password-reset', [
+                'password:reset'
+            ])->plainTextToken;
+
+            return $this->success([
+                'token' => $token
+            ], 'OTP verified successfully');
+        }
+    }
+
+    public function forgotPassword(Request $request)
+    {
+        $request->validate([
+            'password' => 'required|min:6|confirmed'
+        ]);
+        $user = Auth::user();
+
+        $response = $this->authService->forgotPassword([
+            'password' => $request->password,
+            'user' => $user
+        ]);
+
+        return $this->success($response, 'Password reset successfully');
+    }
+
+    public function resetPassword(Request $request)
+    {
+         $request->validate([
+            'old_password' => 'required|min:6',
+            'password' => 'required|min:6|confirmed'
+        ]);
+        $user = Auth::user();
+
+        $response = $this->authService->resetPassword(
+            $request->password,
+            $request->old_password,
+            $user
+        );
+
+        return $this->success($response, 'Password reset successfully');
+        
+    }
+
+
 
     public function fileUpload(Request $request)
     {
-        
+
         $file = $request->file('file');
-        if($request->hasFile('file') == false){
+        if ($request->hasFile('file') == false) {
             return $this->error('No file uploaded', 400);
-        }else{
-           $path = $this->uploadFile($request->file('file'), 'image', 'Codecanyon/uploads',null,'s3');
+        } else {
+            $path = $this->uploadFile($request->file('file'), 'image', 'Codecanyon/uploads', null, 's3');
             return $this->success($path, 'File uploaded successfully');
         }
-        
+
         // Get file from request
         // $path = $this->fileUrl("uploads/S4t1ZEEFpONGY6khmsyy.jpg", 's3');
         // return $this->success($path, 'File URL generated successfully');
@@ -86,5 +148,4 @@ class AuthController extends Controller
         // }
         // return $this->success(null, 'File deleted successfully');
     }
-
 }
